@@ -1,80 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Website Saya</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemesanan Tiket & Pembayaran</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 1. Import EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        // GANTI DENGAN PUBLIC KEY EMAILJS KAMU:
+        (function() { emailjs.init("2EJLv0x3aQtzNDazt"); })();
+    </script>
 
-    .container {
-      display: flex;
-    }
-
-    .sidebar {
-      width: 220px;
-      background-color: #f2f2f2;
-      padding: 20px;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
-
-    .sidebar ul {
-      list-style-type: none;
-      padding: 0;
-    }
-
-    .sidebar li {
-      margin: 15px 0;
-    }
-
-    .sidebar li img {
-      vertical-align: middle;
-      margin-right: 8px;
-      width: 20px;
-      height: 20px;
-    }
-
-    .sidebar li a {
-      text-decoration: none;
-      color: #333;
-      font-size: 16px;
-    }
-
-    .sidebar li a:hover {
-      color: #007BFF;
-    }
-
-    .content {
-      flex: 1;
-      padding: 30px;
-    }
-
-    .content h1 {
-      margin-top: 0;
-    }
-  </style>
+    <!-- 2. Import Midtrans Snap (Sandbox) & Masukkan Client Key Kamu -->
+    <script type="text/javascript"
+      src="https://app.sandbox.midtrans.com/snap/snap.js"
+      data-client-key="Mid-client-x3gywG0pXhfcdcAU"></script>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans relative pb-20">
 
-  <div class="container">
-    <div class="sidebar">
-      <ul>
-        <li><img src="https://icons.iconarchive.com/icons/flaticonmaker/flat-style/256/house-icon.png"> <a href="index.html">Beranda</a></li>
-        <li><img src="https://icons.iconarchive.com/icons/aha-soft/people/256/user-info-icon.png"> <a href="tentang.html">Tentang</a></li>
-        <li><img src="https://icons.iconarchive.com/icons/custom-icon-design/flatastic-7/256/Family-icon.png"> <a href="keluarga.html">Keluarga</a></li>
-        <li><img src="https://icons.iconarchive.com/icons/icons-land/flat-emoticons/256/Study-icon.png"> <a href="studi.html">Studi</a></li>
-        <li><img src="https://icons.iconarchive.com/icons/dtafalonso/ios7-desktop/256/Folder-Contacts-icon.png"> <a href="kontak.html">Kontak</a></li>
-        <li><img src="https://icons.iconarchive.com/icons/google/noto-emoji-objects/256/62976-link-icon.png"> <a href="https://rizkybagus381.github.io/FORTOFOLIO-RISKI-DIGITAL-CV/">Link</a></li>
-      </ul>
+    <div id="notifikasi" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full text-white font-medium shadow-lg transition-all duration-300 opacity-0 -translate-y-4"></div>
+
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden">
+        <div class="bg-blue-600 p-6 text-center">
+            <h1 class="text-2xl font-bold text-white mb-1">Pesan Tiketmu!</h1>
+            <p class="text-blue-100 text-sm">Pilih tiket dan bayar dengan aman.</p>
+        </div>
+
+        <div class="p-8">
+            <form id="form-pemesanan" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="nama" required placeholder="Contoh: Budi Santoso" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Email (Tiket dikirim ke sini)</label>
+                    <input type="email" id="email" required placeholder="email.anda@gmail.com" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Jenis Tiket</label>
+                        <select id="jenis" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+                            <option value="Reguler">Reguler</option>
+                            <option value="VIP">VIP</option>
+                            <option value="VVIP">VVIP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Jumlah</label>
+                        <input type="number" id="jumlah" required min="1" max="10" value="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center">
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded-xl mt-6 flex justify-between items-center border border-blue-100">
+                    <div class="flex flex-col">
+                        <span class="text-xs font-semibold text-blue-600 uppercase">Total Pembayaran</span>
+                        <span class="text-xs text-gray-500" id="detail-harga">1 x Rp 50.000</span>
+                    </div>
+                    <span id="total-harga" class="text-xl font-bold text-blue-700">Rp 50.000</span>
+                </div>
+                
+                <button type="submit" id="btn-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-xl shadow-md transition-all mt-4 flex justify-center items-center gap-2">
+                    <span>Lanjut Pembayaran</span>
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="content">
-      <h1>Selamat Datang</h1>
-      <p>Halaman ini adalah halaman beranda saya.</p>
-    </div>
-  </div>
+    <!-- Script Firebase, Midtrans, & Logika -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+        // Konfigurasi Firebase Kamu
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPzVaOwVo7Vny6Zd1Hfuyn21neRAH5GQs",
+            authDomain: "absen-fa8b4.firebaseapp.com",
+            projectId: "absen-fa8b4",
+            storageBucket: "absen-fa8b4.firebasestorage.app",
+            messagingSenderId: "186875255423",
+            appId: "1:186875255423:web:515159bf18f393de28fd4a",
+            measurementId: "G-M8P1JXK4XZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const tiketCollection = collection(db, "pesanan_tiket");
+
+        const formPemesanan = document.getElementById('form-pemesanan');
+        const notifikasi = document.getElementById('notifikasi');
+        const btnSubmit = document.getElementById('btn-submit');
+        const jenisInput = document.getElementById('jenis');
+        const jumlahInput = document.getElementById('jumlah');
+        const totalHargaPreview = document.getElementById('total-harga');
+        const detailHargaPreview = document.getElementById('detail-harga');
+
+        const daftarHarga = { 'Reguler': 50000, 'VIP': 100000, 'VVIP': 200000 };
+        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+        function hitungTotal() {
+            const hargaSatuan = daftarHarga[jenisInput.value];
+            const jumlah = parseInt(jumlahInput.value) || 0;
+            totalHargaPreview.textContent = formatRupiah(hargaSatuan * jumlah);
+            detailHargaPreview.textContent = `${jumlah} x ${formatRupiah(hargaSatuan)}`;
+        }
+
+        jenisInput.addEventListener('change', hitungTotal);
+        jumlahInput.addEventListener('input', hitungTotal);
+
+        function tampilkanPesan(pesan, tipe = 'sukses') {
+            notifikasi.textContent = pesan;
+            notifikasi.className = `fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full text-white font-medium shadow-lg transition-all duration-300 ${tipe === 'sukses' ? 'bg-green-500' : 'bg-red-500'} translate-y-0 opacity-100`;
+            setTimeout(() => {
+                notifikasi.classList.replace('translate-y-0', '-translate-y-4');
+                notifikasi.classList.replace('opacity-100', 'opacity-0');
+            }, 5000);
+        }
+
+        // ========================================================
+        // KODE SAKTI MIDTRANS (HANYA UNTUK TESTING LOKAL)
+        // ========================================================
+        const SERVER_KEY = "Mid-server-nqjjCWNpRgMLmkE7fxP_8-tW"; 
+        const authString = btoa(SERVER_KEY + ":");
+
+        formPemesanan.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            
+            btnSubmit.innerHTML = "Memuat Pembayaran...";
+            btnSubmit.disabled = true;
+
+            const nama = document.getElementById('nama').value;
+            const email = document.getElementById('email').value;
+            const jenis = jenisInput.value;
+            const jumlah = parseInt(jumlahInput.value);
+            const totalHarga = daftarHarga[jenis] * jumlah;
+            const order_id = "TKT-" + Math.floor(Math.random() * 1000000);
+
+            try {
+                const targetUrl = "https://app.sandbox.midtrans.com/snap/v1/transactions";
+                const requestOptions = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "Authorization": "Basic " + authString
+                    },
+                    body: JSON.stringify({
+                        transaction_details: { order_id: order_id, gross_amount: totalHarga },
+                        customer_details: { first_name: nama, email: email }
+                    })
+                };
+
+                let response;
+
+                try {
+                    // MENCARI JALUR PROXY 1
+                    response = await fetch("https://corsproxy.io/?" + encodeURIComponent(targetUrl), requestOptions);
+                    if (!response.ok) throw new Error("Proxy 1 Gagal");
+                } catch (err) {
+                    console.log("Jalur 1 diblokir browser, mengalihkan ke Jalur 2...");
+                    // MENCARI JALUR PROXY 2 (Cadangan jika corsproxy diblokir Adblock)
+                    response = await fetch("https://api.codetabs.com/v1/proxy/?quest=" + targetUrl, requestOptions);
+                }
+
+                if (!response || !response.ok) {
+                    throw new Error("Semua jalur proxy diblokir.");
+                }
+
+                const data = await response.json();
+                
+                if(!data.token) {
+                    throw new Error("Gagal mendapatkan token dari Midtrans.");
+                }
+
+                // 2. Tampilkan Pop-up Pembayaran Midtrans!
+                window.snap.pay(data.token, {
+                    onSuccess: async function(result){
+                        btnSubmit.innerHTML = "Menyimpan Tiket...";
+                        
+                        // a. Simpan ke Firebase (Otomatis LUNAS)
+                        await addDoc(tiketCollection, {
+                            nama: nama,
+                            email: email, 
+                            jenis: jenis,
+                            jumlah: jumlah,
+                            totalHarga: totalHarga,
+                            statusLunas: true, // OTOMATIS LUNAS
+                            statusCheckin: false,
+                            waktuPesan: serverTimestamp() 
+                        });
+
+                        // b. Kirim Email Tiket
+                        const templateParams = {
+                            to_name: nama,
+                            to_email: email,
+                            jenis_tiket: jenis,
+                            jumlah_tiket: jumlah,
+                            harga_satuan: formatRupiah(daftarHarga[jenis]), 
+                            total_harga: formatRupiah(totalHarga),
+                            order_id: order_id 
+                        };
+                        
+                        // Kirim pakai EmailJS
+                        await emailjs.send('service_g79vc44', 'template_jzzx5pg', templateParams);
+
+                        tampilkanPesan('🎉 Pembayaran Berhasil! Tiket dikirim ke email Anda.');
+                        formPemesanan.reset(); 
+                        hitungTotal();
+                        btnSubmit.innerHTML = "Lanjut Pembayaran";
+                        btnSubmit.disabled = false;
+                    },
+                    onPending: function(result){
+                        tampilkanPesan('Menunggu pembayaran Anda diselesaikan.', 'sukses');
+                        btnSubmit.innerHTML = "Lanjut Pembayaran";
+                        btnSubmit.disabled = false;
+                    },
+                    onError: function(result){
+                        tampilkanPesan('Pembayaran gagal atau dibatalkan.', 'error');
+                        btnSubmit.innerHTML = "Lanjut Pembayaran";
+                        btnSubmit.disabled = false;
+                    },
+                    onClose: function(){
+                        tampilkanPesan('Anda menutup pop-up tanpa membayar.', 'error');
+                        btnSubmit.innerHTML = "Lanjut Pembayaran";
+                        btnSubmit.disabled = false;
+                    }
+                });
+                
+            } catch (error) {
+                console.error("Error Detail:", error);
+                // Pesan error jika Adblocker masih terlalu ketat
+                tampilkanPesan('Gagal memuat pembayaran. Matikan Adblocker atau gunakan mode incognito.', 'error');
+                btnSubmit.innerHTML = "Lanjut Pembayaran";
+                btnSubmit.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
