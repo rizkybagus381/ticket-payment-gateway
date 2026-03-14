@@ -10,7 +10,7 @@
     <!-- 1. Import EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
-        // GANTI DENGAN PUBLIC KEY EMAILJS KAMU:
+        // PUBLIC KEY EMAILJS KAMU:
         (function() { emailjs.init("2EJLv0x3aQtzNDazt"); })();
     </script>
 
@@ -147,7 +147,9 @@
                     headers: {
                         "Content-Type": "application/json",
                         "Accept": "application/json",
-                        "Authorization": "Basic " + authString
+                        "Authorization": "Basic " + authString,
+                        // Dibutuhkan oleh proxy CORS Anywhere
+                        "X-Requested-With": "XMLHttpRequest" 
                     },
                     body: JSON.stringify({
                         transaction_details: { order_id: order_id, gross_amount: totalHarga },
@@ -158,17 +160,24 @@
                 let response;
 
                 try {
-                    // MENCARI JALUR PROXY 1
-                    response = await fetch("https://corsproxy.io/?" + encodeURIComponent(targetUrl), requestOptions);
-                    if (!response.ok) throw new Error("Proxy 1 Gagal");
+                    // JALUR UTAMA: CORS Anywhere (Paling Stabil untuk Developer)
+                    console.log("Mencoba jalur utama...");
+                    response = await fetch("https://cors-anywhere.herokuapp.com/" + targetUrl, requestOptions);
+                    if (!response.ok) throw new Error("CORS Anywhere Gagal");
                 } catch (err) {
-                    console.log("Jalur 1 diblokir browser, mengalihkan ke Jalur 2...");
-                    // MENCARI JALUR PROXY 2 (Cadangan jika corsproxy diblokir Adblock)
-                    response = await fetch("https://api.codetabs.com/v1/proxy/?quest=" + targetUrl, requestOptions);
+                    console.log("Jalur 1 gagal. Mencoba jalur cadangan...");
+                    try {
+                        // JALUR CADANGAN 1: ThingProxy
+                        response = await fetch("https://thingproxy.freeboard.io/fetch/" + targetUrl, requestOptions);
+                        if (!response.ok) throw new Error("Thingproxy Gagal");
+                    } catch (err2) {
+                        // JALUR CADANGAN 2: CorsProxy
+                        response = await fetch("https://corsproxy.io/?" + encodeURIComponent(targetUrl), requestOptions);
+                    }
                 }
 
                 if (!response || !response.ok) {
-                    throw new Error("Semua jalur proxy diblokir.");
+                    throw new Error("Semua jalur diblokir. Apakah Anda sudah klik 'Request temporary access' di cors-anywhere?");
                 }
 
                 const data = await response.json();
@@ -233,8 +242,7 @@
                 
             } catch (error) {
                 console.error("Error Detail:", error);
-                // Pesan error jika Adblocker masih terlalu ketat
-                tampilkanPesan('Gagal memuat pembayaran. Matikan Adblocker atau gunakan mode incognito.', 'error');
+                tampilkanPesan('Gagal memuat pembayaran. Buka link CORS Anywhere sesuai instruksi.', 'error');
                 btnSubmit.innerHTML = "Lanjut Pembayaran";
                 btnSubmit.disabled = false;
             }
